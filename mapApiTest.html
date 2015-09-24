@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>App Inventor - Map Component</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <style>
+      html, body, #map-canvas {
+        height: 100%;
+        margin: 0px;
+        padding: 0px
+      }
+    </style>
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
+    <script>
+      /**
+       * This map script is an abstraction of a number of functions from the Google maps
+       * JavaScript API to be used within a customized WebView as an App Inventor Component.
+       *
+       * It contains two main objects: thisMap and mapMarkers.
+       * thisMap initializes the map and makes use of mapMarkers, which simply encapsulates all
+       * functions related to markers placed in the map. It is possible to create other utility
+       * objects with other functionality in the SDK such as drawing, layers, or services.
+       */
+
+      /**
+       * Main function for this script. Initializes the map and all the related functionality.
+       *
+       */
+      var thisMap = function(centerLat, centerLng, showCenter, initialZoom) {
+      
+        var map;
+        var centerMarker;
+        var markerFunctions;
+        var allMarkers = {};
+        var zoom = initialZoom || 6;
+        var showingCenter = showCenter || true;
+        function initialize() {
+          var mapOptions = {
+            zoom: zoom,
+            center: new google.maps.LatLng(centerLat, centerLng),
+            disableDoubleClickZoom: true
+          };
+          mapComponent = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+          centerMarker = createCenter();
+          showCenter(showingCenter);
+
+          //Initialize marker functions object, exposes the marker functions.
+          markerFunctions = markerObject(thisMap);
+          
+        }
+
+        var createCenter = function(){
+          if (centerMarker) centerMarker.setMap(null); // Delete any existing center first.
+          var newCenter;
+          if (mapComponent && mapComponent.getCenter()){
+              newCenter = new google.maps.Marker({
+                position: mapComponent.getCenter(),
+                map: mapComponent,
+                title: 'Map Center',
+                icon: {
+                  path: google.maps.SymbolPath.CIRCLE,
+                  scale: 6
+                }
+              });
+          }
+          return newCenter;
+        };
+
+        // Special case of showing a marker only for the center. Might be possible to abstract in
+        // markerFunctions, but leaving it here for now (jos).
+        var showCenter = function(show){
+          if (show){
+            if (centerMarker)
+              centerMarker.setMap(mapComponent);
+            else
+              centerMarker = createCenter();
+          } else {
+            centerMarker.setMap(null);
+          }
+
+          showingCenter = show;
+        };
+
+        var setCenter = function(location){
+          if (location instanceof google.maps.LatLng){
+            mapComponent.setCenter(location);
+          } else {
+            mapComponent.setCenter(markerFunctions.locationFromTextCoords(location));
+          }
+
+          centerMarker = createCenter();
+          showCenter(showingCenter);
+        };
+
+        var getMap = function() { return mapComponent; };
+        var getMarkerFunctions = function() { return markerFunctions; };
+
+        var getAllMarkers = function() { return allMarkers; };
+
+        var getMarker = function(location) {
+          return allMarkers[location.toString()];
+        };
+
+
+        /**
+         * Add a marker, with additional information, to the map.
+         * @param location {google.maps.LatLng} object specifying the position in the map
+         * @param infoWindowContent content to be displayed in this marker infoWindow
+         * @param title a title for the marker (shown on hover in browsers)
+         */
+        var createMarker = function(location, title, infoWindowContent){
+          var marker;
+          var loc;
+          if (location instanceof google.maps.LatLng) {
+            loc = location;
+          } else if (locationFromTextCoords(location)) {
+            loc = locationFromTextCoords(location);
+          } else if (locationFromLatLngCoords(location[0], location[1])) {
+            loc = locationFromLatLngCoords(location[0], location[1]);
+          } else {
+            //try geolocating from address
+            //else throw error
+            console.log("No valid location.");
+            return null;
+          }
+          console.log("Location", loc.toString());
+          var existingMarker = getMarker(loc);
+          console.log("Existing marker??", existingMarker);
+          if (existingMarker) { //If it exists, there's no need to create it
+            marker = existingMarker;
+
+            // We override values even if they are not different - it's easier.
+            marker.title = title;
+            if (infoWindowContent && marker.info){
+              marker.info.setContent(infoWindowContent);
+            }
+          } else {
+            marker = new google.maps.Marker({
+              position: loc,
+              title: title || '',
+              map: mapComponent
+            });
+
+            addMarker(marker);
+
+            if (infoWindowContent) {
+              markerFunctions.createInfoWindow(marker.getPosition().toString(), infoWindowContent);
+            }
+          }
+        // } else if () {
+
+        //   // if {
+
+        //   // } else {
+        //   //   console.log('Calling Error handler on Android side');
+        //   //   return null;
+        //   // }
+        // }
+
+          return marker;
+
+        };
+
+        /**
+         * Decodes the JSON input and generates and displays markers for each of the objects.
+         * Sample data:
+         * "[
+         *     {"lat":48.856614,"lng":2.3522219000000177,"title":"","content":""},
+         *     {"lat":48,"lng":3,"title":"near paris","content":"near Paris content"}
+         *  ]"
+         * @param listOfMarkers a JSON representation of the markers to be displayed
+         */
+        var createMarkersFromList = function(listOfMarkers) {
+          try {
+            allMarkers = JSON.parse(listOfMarkers);
+          } catch(parseError) {
+            console.log('List of Markers is not valid JSON. Notifying Android side.');
+          }
+
+          function decodeMarker(markerObject){
+            var markerData = [];
+            var lat, lng;
+
+            if (markerObject.lat)
+              lat = markerObject.lat;
+
+            if (markerObject.lng)
+              lng = markerObject.lng;
+
+            if (lat && lng)
+              markerData[0] = locationFromLatLngCoords(lat, lng);
+
+            if (markerObject.title)
+              markerData[1] = markerObject.title;
+
+            if (markerObject.content)
+              markerData[2] = markerObject.content;
+
+            // Location has to be available(other fields are optional).
+            if (markerData[0] instanceof google.maps.LatLng)
+              return markerData;
+            else //TODO (jos) trigger user feedback or not?
+              return null;
+          }
+
+          allMarkers.forEach(function(markerObject) {
+            // Try to decode each marker and even if some fail, still add the others.
+            var markerData = decodeMarker(markerObject);
+            if (markerData)
+              addMarker(markerData[0], markerData[1], markerData[2]);
+          });
+        };
+
+
+        //TODO Verify the marker isn't already in the dict? If it is already in the dict it will be overwritten.
+        var addMarker = function(marker) {
+          var loc = marker.getPosition().toString();
+          allMarkers[loc] = marker;
+        };
+
+        var addMarkersFromList = function(markerList) {
+          for (i = 0; i < markerList.length; i++) {
+            if (!getMarker(markerList[i].prototype.getPosition().toString())) {
+              addMarker(markerList[i]);
+            }
+          }
+        };
+        
+        var locationFromLatLngCoords = function(lat, lng){
+          var errorParsing = false;
+          //DO WE NEED TO DO THIS? the LatLng will clamp or wrap the coordinates. 
+          if (isNaN(lat) || isNaN(lng)) errorParsing = true;
+          // if (lat < -90 || lat > 90) errorParsing = true;
+          // if (lng < -180 || lng > 180) errorParsing = true;
+
+          if (errorParsing) {
+            return null;
+          } else {
+            return new google.maps.LatLng(lat, lng);
+          }
+
+        };
+
+        /**
+         * Generates a LatLng map object from coordinates passed in as a string. Valid ranges are:
+         * Lat [-90, 90], and Lng [-180, 180].
+         * @param locationText a string in the format 'float, float'
+         * @returns {google.maps.LatLng} a LatLng object or null if the location is not in the
+         * right format.
+         */
+        var locationFromTextCoords = function(locationText) {
+          var lat, lng;
+          var locationSplit = locationText.split(',');
+          if (locationSplit.length === 2){
+            lat = parseFloat(locationSplit[0]);
+            lng = parseFloat(locationSplit[1]);
+            return locationFromLatLngCoords(lat, lng);
+          } else {
+            return null;
+          }
+        };
+
+        var showMarkers = function (show){
+          if (show) {
+            var allMarkers = mapComponent.getAllMarkers();
+            for (var key in allMarkers){
+              allMarkers[key].marker.setMap(mapComponent);
+            }
+          } else {
+            for (var key in allMarkers){
+              allMarkers[key].marker.setMap(null);
+            }
+          }
+        };
+
+        var deleteMarkers = function () {
+          showMarkers(false);
+          mapComponent.deleteAllMarkers();
+        };
+
+        //Geolocation service
+        var getGeolocationFromAddress = function (address){
+          var geocoder = new google.maps.Geocoder();
+          geocoder.geocode({address: address}, geolocationResults)
+        };
+
+        function geolocationResults(results, status){
+          if (status === 'OK') {
+            var firstLocationFound = results[0].geometry.location;
+            if (firstLocationFound){
+              console.log("First loc:", firstLocationFound);
+              var marker = createMarker(firstLocationFound);
+              var markerJson = createJsonMarkerFromId(marker.prototype.getPosition().toString());
+              // return firstLocationFound;
+            } else {
+              console.log('No location found!');
+            }
+          } else if (status === "ZERO_RESULTS"){
+            console.log('No results found for that particular address.');
+          } else {
+            console.log('No results found. Status of Geolocation call: ' + status);
+          }
+        };
+
+        var deleteAllMarkers = function() {
+          allMarkers = {};
+        };
+
+        var deleteMarker = function(markerId) {
+          delete allMarkers[markerId];
+        };
+
+        var setZoom = function(zoom) {
+          if (zoom >= 0 && zoom <= 19){
+            mapComponent.setZoom(zoom);
+          } else { // Exception handling is also done on Android side
+            console.log('Zoom value ' + zoom + ' is not in the valid range 0-19');
+          }
+        };
+
+        var getZoom = function() { return mapComponent.zoom; };
+
+        //API for the thisMap object: main entry object for functionality
+        return {
+          initialize: initialize,
+          showCenter: showCenter,
+          setCenter: setCenter,
+          getMap: getMap, // For Debugging (not used from the component).
+          getMarkerFunctions: getMarkerFunctions,
+          setZoom: setZoom,
+          getZoom: getZoom,
+          createMarker: createMarker,
+          createMarkersFromList: createMarkersFromList,
+          locationFromLatLngCoords: locationFromLatLngCoords,
+          locationFromTextCoords: locationFromTextCoords,
+          showMarkers: showMarkers,
+          deleteMarkers: deleteMarkers,
+          getGeolocationFromAddress: getGeolocationFromAddress,
+          getAllMarkers: getAllMarkers,
+          getMarker: getMarker
+        }
+      //TODO (jos) Magic numbers: the center of the map will come from Android
+      }  (43.473847, -8.169154, true, 2); //Auto initialize the thisMap object
+
+
+
+      /**
+       * This function returns an object with certain methods exposed as its API. The functionality
+       * of this object is related to management of markers in the map.
+       * @returns an Object with methods related to Marker management.
+       * @param mapComponent the map to associate the markers with.
+       */
+      var markerObject = function(mapComponent) { //this mapComponent is ONLY thisMap from above.
+
+        if (!mapComponent) throw new Error('No map available'); 
+        //if there is no mapComponent, the marker should just disappear/shouldn't exist. Don't think we need to throw an error...
+
+        markerObject.prototype.id = function(marker) {
+          return marker.prototype.getPosition().toString();
+        }
+
+        markerObject.prototype.equals = function(otherMarker) {
+          if (otherMarker == null) return false;
+          if (otherMarker instanceof AIMarker){
+            //Equality is based on position - two markers on the same position are the same marker
+            return this.marker.prototype.getPosition().toString() ===
+                otherMarker.marker.prototype.getPosition().toString();
+          }
+          return false;
+
+        }
+
+        // Closure needed to associate each markerId with its click handler function
+        function markerDoubleClicked(markerId, doubleClick) {
+          return function(){
+            handleMarkerById(markerId, doubleClick);
+          }
+        }
+
+        function handleMarkerById(markerId, doubleClick) {
+          var markerJson = createJsonMarkerFromId(markerId);
+        }
+
+        function createJsonMarkerFromId(markerId){
+          var currentMarker = mapComponent.getMarker(markerId);
+          var markerObject = {
+            lat: currentMarker.marker.prototype.getPosition().lat(),
+            lng: currentMarker.marker.prototype.getPosition().lng(),
+            title: currentMarker.marker.title || '',
+            info: (currentMarker.marker.info && currentMarker.marker.info.content) ?
+                currentMarker.marker.info.content : ''
+          }
+          var markerJson = JSON.stringify(markerObject);
+
+          return markerJson;
+        }
+
+        var panToMarker = function(markerId) {
+          var markerToPanTo = mapComponent.getMarker(markerId);
+          if (markerToPanTo)
+            mapComponent.panTo(markerToPanTo.prototype.getPosition());
+        };
+
+        var addListenersForMarkers = function (add) {
+          if (add){
+            google.maps.event.addListener(mapComponent, 'click', function(event) {
+              var aiMarker = addMarker(event.latLng);
+              var markerJson = createJsonMarkerFromId(aiMarker.prototype.getPosition().toString());
+            });
+          } 
+          else
+            google.maps.event.clearListeners(mapComponent,'click');
+        };
+
+        var showMarker = function(markerId, show) {
+          var markerToShow = mapComponent.getMarker(markerId);
+          if (show) {
+            if (markerToShow){
+              markerToShow.setMap(mapComponent);
+            }
+          } else {
+            if (markerToShow) {
+              markerToShow.setMap(null);
+            }
+          }
+        };
+
+        var deleteMarker = function(markerId) {
+          showMarker(markerId, false);
+          mapComponent.deleteMarker(markerId);
+        }
+
+        // InfoWindow functions
+        // TODO this is circular, needs to use "this" marker object
+        var createInfoWindow = function(markerId, content) {
+          var infoWindow = new google.maps.InfoWindow({
+            content: content
+          });
+          var marker = mapComponent.getMarker(markerId);
+          if (marker)
+            marker.info = infoWindow;
+        };
+
+        var openInfoWindow = function(markerId){
+          var marker = mapComponent.getMarker(markerId);
+          if (marker && marker.info)
+            marker.info.open(mapComponent, marker);
+        };
+
+        var closeInfoWindow = function(markerId){
+          var marker = mapComponent.getMarker(markerId);
+          if (marker && marker.info)
+            marker.info.close();
+        };
+
+        var setMarkerTitle = function(markerId, title) {
+          var marker = mapComponent.getMarker(markerId);
+          if (marker)
+            marker.setTitle(title);
+        };
+
+        //API for the mapMarkers object
+        //MUST ADD FUNCTION HANDLES HERE
+        return {
+          addListenersForMarkers: addListenersForMarkers,
+          showMarker: showMarker,
+          deleteMarker: deleteMarker,
+          panToMarker: panToMarker,
+          createInfoWindow: createInfoWindow,
+          openInfoWindow: openInfoWindow,
+          closeInfoWindow: closeInfoWindow,
+          setMarkerTitle: setMarkerTitle,
+        };
+
+      };
+
+      google.maps.event.addDomListener(window, 'load', thisMap.initialize);
+
+    </script>
+  </head>
+  <body>
+    <div id="map-canvas"></div>
+  </body>
+</html>

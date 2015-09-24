@@ -37,8 +37,7 @@
           if (marker instanceof google.maps.Marker){
             this.marker = marker;
             this.id = marker.getPosition().toString(); //Use position as unique id
-          }
-          else {
+          } else {
             console.log('Calling Error handler on Android side - Invalid Marker');
             androidObject.dispatchErrorToAndroid(androidObject.ERROR_INVALID_MARKER);
           }
@@ -74,8 +73,7 @@
               if (infoWindowContent && marker.info){
                 marker.info.setContent(infoWindowContent);
               }
-            }
-            else {
+            } else {
               marker = new google.maps.Marker({
                 position: location,
                 title: title || '',
@@ -92,8 +90,7 @@
                 createInfoWindow(theId, infoWindowContent);
               }
             }
-          }
-          else {
+          } else {
             console.log('Calling Error handler on Android side');
             androidObject.dispatchErrorToAndroid(androidObject.ERROR_ILLEGAL_COORDS_FORMAT);
           }
@@ -112,9 +109,8 @@
           var markerJson = createJsonMarkerFromId(markerId);
           if (doubleClick)
             androidObject.sendDoubleMarkerToAndroid(markerJson);
-          else{
+          else
             androidObject.sendMarkerToAndroid(markerJson);
-          }
         }
 
         function createJsonMarkerFromId(markerId){
@@ -148,10 +144,9 @@
          */
         var addMarkersFromList = function(listOfMarkers) {
           var allMarkers = [];
-          try{
+          try {
             allMarkers = JSON.parse(listOfMarkers);
-          }
-          catch(parseError) {
+          } catch(parseError) {
             console.log('List of Markers is not valid JSON. Notifying Android side.');
             androidObject.dispatchErrorToAndroid(androidObject.ERROR_PARSING_MARKERS_LIST)
           }
@@ -192,17 +187,17 @@
 
         var locationFromLatLngCoords = function(lat, lng){
           var errorParsing = false;
-
+          //DO WE NEED TO DO THIS? the LatLng will wrap the coordinates. 
           if (isNaN(lat) || isNaN(lng)) errorParsing = true;
           if (lat < -90 || lat > 90) errorParsing = true;
           if (lng < -180 || lng > 180) errorParsing = true;
 
-          if (errorParsing){
+          if (errorParsing) {
             androidObject.dispatchErrorToAndroid(androidObject.ERROR_ILLEGAL_COORDS_FORMAT);
             return null;
-          }
-          else
+          } else {
             return new google.maps.LatLng(lat, lng);
+          }
 
         };
 
@@ -221,8 +216,7 @@
             lat = parseFloat(locationSplit[0]);
             lng = parseFloat(locationSplit[1]);
             return locationFromLatLngCoords(lat, lng);
-          }
-          else {
+          } else {
             androidObject.dispatchErrorToAndroid(androidObject.ERROR_ILLEGAL_COORDS_FORMAT);
             return null;
           }
@@ -235,8 +229,7 @@
               var markerJson = createJsonMarkerFromId(aiMarker.id);
               androidObject.sendUserMarkerAddedToAndroid(markerJson);
             });
-          }
-          else
+          } else
             google.maps.event.clearListeners(mapComponent,'click');
         };
 
@@ -246,8 +239,7 @@
             if (markerToShow){
               markerToShow.setMap(mapComponent);
             }
-          }
-          else {
+          } else {
             if (markerToShow) {
               markerToShow.setMap(null);
             }
@@ -259,8 +251,7 @@
             for (var key in aiMarkers){
               aiMarkers[key].marker.setMap(mapComponent);
             }
-          }
-          else {
+          } else {
             for (var key in aiMarkers){
               aiMarkers[key].marker.setMap(null);
             }
@@ -310,17 +301,14 @@
               var markerJson = createJsonMarkerFromId(marker.id);
               androidObject.sendGeolocationMarkerAddedToAndroid(markerJson,
                   results[0].formatted_address);
-            }
-            else {
+            } else {
               console.log('No location found!');
               notifyAndroid = true;
             }
-          }
-          else if (status === "ZERO_RESULTS"){
+          } else if (status === "ZERO_RESULTS"){
             console.log('No results found for that particular address.');
              notifyAndroid = true;
-          }
-          else {
+          } else {
             console.log('No results found. Status of Geolocation call: ' + status);
              notifyAndroid = true;
           }
@@ -359,7 +347,60 @@
             marker.setTitle(title);
         };
 
+        //var aiPolygons = {};
+        /**
+         * TODO ajcolter 
+         * Add a polygon to the map.
+         * @param location {google.maps.LatLng} object specifying the position in the map
+         * @param infoWindowContent content to be displayed in this marker infoWindow
+         * @param title a title for the marker (shown on hover in browsers)
+         */
+        var addAIPolygon = function(pathList, strkColor, strkOpacity, strkWeight, fllColor, fllOpacity){
+          var newAiPolygon, polygon;
+              polygon = new google.maps.Polygon({
+                paths: pathList,
+                strokeColor: strkColor,
+                strokeOpacity: strkOpacity,
+                strokeWeight: strkWeight,
+                fillColor: fllColor,
+                fillOpacity: fllOpacity
+              });
+
+              // newAiPolygon = new AIMarker(marker);
+              // var theId = newAiMarker.id;
+              // google.maps.event.addListener(marker, 'click', markerClicked(theId));
+              // google.maps.event.addListener(marker, 'dblclick', markerClicked(theId, true));
+              // aiMarkers[marker.getPosition().toString()] = newAiMarker;
+              polygon.setMap(mapComponent);
+
+              var polygonJson = createJsonPolygon(polygon);
+              androidObject.sendPolygonAddedToAndroid(polygonJson, results[0].formatted_address);
+
+          // } else {
+          //   console.log('Calling Error handler on Android side');
+          //   androidObject.dispatchErrorToAndroid(androidObject.ERROR_ILLEGAL_COORDS_FORMAT);
+          // }
+          return polygon;
+          // return addAIPolygon;
+        };
+
+        function createJsonPolygon(polygon){
+          var currentPolygon = polygon;
+          var polygonObject = {
+            paths: currentPolygon.getPaths(),
+            strokeColor: currentPolygon.strokeColor,
+            strokeOpacity: currentPolygon.strokeOpacity,
+            strokeWeight: currentPolygon.strokeWeight,
+            fillColor: currentPolygon.fillColor,
+            fillOpacity: currentPolygon.fillOpacity
+          }
+          var polygonJson = JSON.stringify(polygonObject);
+
+          return polygonJson;
+        };
+
         //API for the mapMarkers object
+        //MUST ADD FUNCTION HANDLES HERE
         return {
           addMarkersFromList: addMarkersFromList,
           addListenersForMarkers: addListenersForMarkers,
@@ -376,7 +417,8 @@
           locationFromLatLngCoords: locationFromLatLngCoords,
           setMarkerTitle: setMarkerTitle,
           addAIMarker: addAIMarker,
-          aiMarkers: aiMarkers
+          aiMarkers: aiMarkers,
+          addAIPolygon: addAIPolygon
         };
 
       };
@@ -440,9 +482,9 @@
               centerMarker.setMap(mapComponent);
             else
               centerMarker = createCenter();
-          }
-          else
+          } else {
             centerMarker.setMap(null);
+          }
 
           showingCenter = show;
         };
@@ -450,8 +492,9 @@
         var setCenter = function(location){
           if (location instanceof google.maps.LatLng){
             mapComponent.setCenter(location);
+          } else {
+            mapComponent.setCenter(markerFunctions.locationFromTextCoords(location));
           }
-          else mapComponent.setCenter(markerFunctions.locationFromTextCoords(location));
 
           centerMarker = createCenter();
           showCenter(showingCenter);
@@ -463,9 +506,9 @@
         var setZoom = function(zoom) {
           if (zoom >= 0 && zoom <= 19){
             mapComponent.setZoom(zoom);
-          }
-          else // Exception handling is also done on Android side
+          } else { // Exception handling is also done on Android side
             console.log('Zoom value ' + zoom + ' is not in the valid range 0-19');
+          }
         };
 
         var getZoom = function() { return mapComponent.zoom; };
@@ -497,10 +540,10 @@
       var androidObject = {
 
         // CONSTANTS FOR ERRORS, As defined on the Android side.
-        ERROR_ILLEGAL_COORDS_FORMAT: 2702,
-        ERROR_PARSING_MARKERS_LIST: 2703,
-        ERROR_INVALID_MARKER: 2704,
-        ERROR_NO_GEOLOCATION_RESULTS: 2706,
+        ERROR_ILLEGAL_COORDS_FORMAT: 2802,
+        ERROR_PARSING_MARKERS_LIST: 2803,
+        ERROR_INVALID_MARKER: 2804,
+        ERROR_NO_GEOLOCATION_RESULTS: 2806,
 
         /**
          * Function to dispatch errors to Android through the AppInventorMap interface. If this
@@ -552,6 +595,11 @@
         sendGeolocationMarkerAddedToAndroid: function(markerJson, formattedAddress) {
           if (typeof AppInventorMap !== 'undefined')
             AppInventorMap.geolocationMarkerAdded(markerJson, formattedAddress);
+        }
+
+        sendPolygonAddedToAndroid: function(polygonJson) {
+          if (typeof AppInventorMap !== 'undefined')
+            AppInventorMap.polygonAdded(polygonJson);
         }
 
       };
