@@ -29,6 +29,7 @@
        */
       var thisMap = function(centerLat, centerLng, showCenter, initialZoom) {
       
+        var map;
         var centerMarker;
         var markerFunctions;
         var allMarkers = {};
@@ -86,6 +87,10 @@
         var getMarker = function(location) {
           return allMarkers[location.toString()];
         };
+
+        var getMap = function() {
+          return map;
+        }
 
 
         /**
@@ -332,10 +337,11 @@
           deleteAllMarkers: deleteAllMarkers,
           setZoom: setZoom,
           getZoom: getZoom,
-          panToMarker: panToMarker
+          panToMarker: panToMarker,
+          getMap: getMap
         }
       //TODO (jos) Magic numbers: the center of the map will come from Android
-      }  (43.473847, -8.169154, true, 2); //Auto initialize the thisMap object
+      } (42.3598, -71.0921, true, 2); //Auto initialize the thisMap object
 
 
 
