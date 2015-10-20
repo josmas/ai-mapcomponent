@@ -1,0 +1,107 @@
+<script>
+
+var markerContainer = function(map, lat, lng, title, icon, clickable, visible) {
+	
+	var marker;
+	var position;
+	var id;
+
+	function initialize() {
+	  var markerOptions = {
+	  	map: map,
+	  	position: {lat: lat, lng: lng},
+	  	title: title,
+	  	icon: icon,
+	  	clickable: clickable,
+	  	visible: visible
+	  };
+
+	  marker = new google.maps.Marker(markerOptions);
+    id = marker.getPosition().toString();
+  };
+
+  var deleteMarker = function() {
+  	marker.setMap(null);
+  	markerContainer.id = null;
+
+  	delete marker; //does this work??
+  };
+
+  var equals = function(otherMarker) {
+  	return this === otherMarker;
+  };
+
+  var getId = function() {
+  	return markerContainer.id;
+  };
+
+  var getIcon = function() {
+  	return marker.getIcon();
+  };
+
+  var getMap = function() {
+  	return marker.getMap();
+  };
+
+  var getTitle = function() {
+  	return marker.getTitle();
+  };
+
+  var getClickable = function() {
+  	return marker.getClickable();
+  };
+
+  var getPosition = function() {
+  	return marker.getPosition();
+  };
+
+  var getVisible = function() {
+  	return marker.getVisible();
+  };
+
+  var setIcon = function(icon) {
+  	marker.setIcon(icon);
+  };
+
+  var setMap = function(map) {
+  	marker.setMap(map);
+  };
+
+  var setTitle = function(title) {
+  	marker.setTitle(title);
+  };
+
+  var setClickable = function(clickable) {
+  	marker.setClickable(clickable);
+  }
+
+  var setPosition = function(lat, lng) {
+  	//TODO convert to LatLng object
+  	marker.setPosition({lat: lat, lng: lng});
+  };
+
+  var setVisible = function(visible) {
+  	marker.setVisible(visible);
+  };
+
+  return {
+  	deleteMarker: deleteMarker,
+  	equals: equals,
+  	getId: getId,
+  	getIcon: getIcon,
+  	getMap: getMap,
+  	getTitle: getTitle,
+  	getClickable: getClickable,
+  	getPosition: getPosition,
+  	getVisible: getVisible,
+  	setIcon: setIcon,
+  	setMap: setMap,
+  	setTitle: setTitle,
+  	setClickable: setClickable,
+  	setPosition: setPosition,
+  	setVisible: setVisible
+  }
+
+}
+
+</script>

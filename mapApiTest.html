@@ -27,7 +27,7 @@
        * Main function for this script. Initializes the map and all the related functionality.
        *
        */
-      var thisMap = function(centerLat, centerLng, showCenter, initialZoom) {
+      var mapContainer = function(centerLat, centerLng, showCenter, initialZoom) {
       
         var map;
         var centerMarker;
@@ -99,7 +99,8 @@
          * @param infoWindowContent content to be displayed in this marker infoWindow
          * @param title a title for the marker (shown on hover in browsers)
          */
-        var createMarker = function(location, title, infoWindowContent){
+        var createMarker = function(location, title, infoWindowContent){ 
+          //TODO add call to markerContainer here
           var marker;
           var loc;
           if (location instanceof google.maps.LatLng) {
@@ -129,7 +130,8 @@
               title: title || '',
               map: map
             });
-
+            
+            //marker = markerContainer(map, )
             addMarker(marker);
 
             if (infoWindowContent) {
@@ -344,6 +346,110 @@
       } (42.3598, -71.0921, true, 2); //Auto initialize the thisMap object
 
 
+      var markerContainer = function(map, lat, lng, title, icon, clickable, visible) {
+        
+        var marker;
+        var position;
+        var id;
+
+        function initialize() {
+          var markerOptions = {
+            map: map,
+            position: {lat: lat, lng: lng},
+            title: title,
+            icon: icon,
+            clickable: clickable,
+            visible: visible
+          };
+
+          marker = new google.maps.Marker(markerOptions);
+          id = marker.getPosition().toString();
+        };
+
+        var deleteMarker = function() {
+          marker.setMap(null);
+          markerContainer.id = null;
+
+          delete marker; //does this work??
+        };
+
+        var equals = function(otherMarker) {
+          return this === otherMarker;
+        };
+
+        var getId = function() {
+          return markerContainer.id;
+        };
+
+        var getIcon = function() {
+          return marker.getIcon();
+        };
+
+        var getMap = function() {
+          return marker.getMap();
+        };
+
+        var getTitle = function() {
+          return marker.getTitle();
+        };
+
+        var getClickable = function() {
+          return marker.getClickable();
+        };
+
+        var getPosition = function() {
+          return marker.getPosition();
+        };
+
+        var getVisible = function() {
+          return marker.getVisible();
+        };
+
+        var setIcon = function(icon) {
+          marker.setIcon(icon);
+        };
+
+        var setMap = function(map) {
+          marker.setMap(map);
+        };
+
+        var setTitle = function(title) {
+          marker.setTitle(title);
+        };
+
+        var setClickable = function(clickable) {
+          marker.setClickable(clickable);
+        }
+
+        var setPosition = function(lat, lng) {
+          //TODO convert to LatLng object
+          marker.setPosition({lat: lat, lng: lng});
+        };
+
+        var setVisible = function(visible) {
+          marker.setVisible(visible);
+        };
+
+        return {
+          deleteMarker: deleteMarker,
+          equals: equals,
+          getId: getId,
+          getIcon: getIcon,
+          getMap: getMap,
+          getTitle: getTitle,
+          getClickable: getClickable,
+          getPosition: getPosition,
+          getVisible: getVisible,
+          setIcon: setIcon,
+          setMap: setMap,
+          setTitle: setTitle,
+          setClickable: setClickable,
+          setPosition: setPosition,
+          setVisible: setVisible
+        }
+
+      }
+
 
       /**
        * This function returns an object with certain methods exposed as its API. The functionality
@@ -351,124 +457,124 @@
        * @returns an Object with methods related to Marker management.
        * @param map the map to associate the markers with. thisMap object from above.
        */
-      var markerObject = function(map) {
+      // var markerObject = function(map) {
 
-        if (!map) throw new Error('No map available'); 
-        //if there is no map, the marker should just disappear/shouldn't exist. Don't think we need to throw an error...
+      //   if (!map) throw new Error('No map available'); 
+      //   //if there is no map, the marker should just disappear/shouldn't exist. Don't think we need to throw an error...
 
-        var getId = function(marker) {
-          return marker.getPosition().toString();
-        };
+      //   var getId = function(marker) {
+      //     return marker.getPosition().toString();
+      //   };
 
-        var equals = function(otherMarker) {
-          if (otherMarker == null) return false;
-          if (otherMarker instanceof AIMarker){
-            //Equality is based on position - two markers on the same position are the same marker
-            return this.marker.getPosition().toString() ===
-                otherMarker.marker.getPosition().toString();
-          }
-          return false;
+      //   var equals = function(otherMarker) {
+      //     if (otherMarker == null) return false;
+      //     if (otherMarker instanceof AIMarker){
+      //       //Equality is based on position - two markers on the same position are the same marker
+      //       return this.marker.getPosition().toString() ===
+      //           otherMarker.marker.getPosition().toString();
+      //     }
+      //     return false;
 
-        };
+      //   };
 
-        // Closure needed to associate each markerId with its click handler function
-        function doubleClicked(markerId, doubleClick) {
-          return function(){
-            doubleClickHandler(markerId, doubleClick);
-          }
-        }
+      //   // Closure needed to associate each markerId with its click handler function
+      //   function doubleClicked(markerId, doubleClick) {
+      //     return function(){
+      //       doubleClickHandler(markerId, doubleClick);
+      //     }
+      //   }
 
-        function doubleClickHandler(markerId, doubleClick) {
-          var markerJson = createJsonMarkerFromId(markerId);
-        }
+      //   function doubleClickHandler(markerId, doubleClick) {
+      //     var markerJson = createJsonMarkerFromId(markerId);
+      //   }
 
-        function createJsonMarkerFromId(markerId){
-          var currentMarker = map.getMarker(markerId);
-          var markerObject = {
-            lat: currentMarker.getPosition().lat(),
-            lng: currentMarker.getPosition().lng(),
-            title: currentMarker.title || '',
-            info: (currentMarker.info && currentMarker.info.content) ?
-                currentMarker.info.content : ''
-          }
-          var markerJson = JSON.stringify(markerObject);
+      //   function createJsonMarkerFromId(markerId){
+      //     var currentMarker = map.getMarker(markerId);
+      //     var markerObject = {
+      //       lat: currentMarker.getPosition().lat(),
+      //       lng: currentMarker.getPosition().lng(),
+      //       title: currentMarker.title || '',
+      //       info: (currentMarker.info && currentMarker.info.content) ?
+      //           currentMarker.info.content : ''
+      //     }
+      //     var markerJson = JSON.stringify(markerObject);
 
-          return markerJson;
-        }
+      //     return markerJson;
+      //   }
 
-        var addListenersForMarkers = function (add) {
-          if (add){
-            google.maps.event.addListener(map, 'click', function(event) {
-              var aiMarker = addMarker(event.latLng);
-              var markerJson = createJsonMarkerFromId(aiMarker.prototype.getPosition().toString());
-            });
-          } 
-          else
-            google.maps.event.clearListeners(map,'click');
-        };
+      //   var addListenersForMarkers = function (add) {
+      //     if (add){
+      //       google.maps.event.addListener(map, 'click', function(event) {
+      //         var aiMarker = addMarker(event.latLng);
+      //         var markerJson = createJsonMarkerFromId(aiMarker.prototype.getPosition().toString());
+      //       });
+      //     } 
+      //     else
+      //       google.maps.event.clearListeners(map,'click');
+      //   };
 
-        var showMarker = function(markerId, show) {
-          var markerToShow = map.getMarker(markerId);
-          if (show) {
-            if (markerToShow){
-              markerToShow.setMap(map);
-            }
-          } else {
-            if (markerToShow) {
-              markerToShow.setMap(null);
-            }
-          }
-        };
+      //   var showMarker = function(markerId, show) {
+      //     var markerToShow = map.getMarker(markerId);
+      //     if (show) {
+      //       if (markerToShow){
+      //         markerToShow.setMap(map);
+      //       }
+      //     } else {
+      //       if (markerToShow) {
+      //         markerToShow.setMap(null);
+      //       }
+      //     }
+      //   };
 
-        var deleteMarker = function(markerId) {
-          showMarker(markerId, false);
-          map.deleteMarker(markerId);
-        }
+      //   var deleteMarker = function(markerId) {
+      //     showMarker(markerId, false);
+      //     map.deleteMarker(markerId);
+      //   }
 
-        // InfoWindow functions
-        // TODO this is circular, needs to use "this" marker object
-        var createInfoWindow = function(markerId, content) {
-          var infoWindow = new google.maps.InfoWindow({
-            content: content
-          });
-          var marker = map.getMarker(markerId);
-          if (marker)
-            marker.info = infoWindow;
-        };
+      //   // InfoWindow functions
+      //   // TODO this is circular, needs to use "this" marker object
+      //   var createInfoWindow = function(markerId, content) {
+      //     var infoWindow = new google.maps.InfoWindow({
+      //       content: content
+      //     });
+      //     var marker = map.getMarker(markerId);
+      //     if (marker)
+      //       marker.info = infoWindow;
+      //   };
 
-        var openInfoWindow = function(markerId){
-          var marker = map.getMarker(markerId);
-          if (marker && marker.info)
-            marker.info.open(map, marker);
-        };
+      //   var openInfoWindow = function(markerId){
+      //     var marker = map.getMarker(markerId);
+      //     if (marker && marker.info)
+      //       marker.info.open(map, marker);
+      //   };
 
-        var closeInfoWindow = function(markerId){
-          var marker = map.getMarker(markerId);
-          if (marker && marker.info)
-            marker.info.close();
-        };
+      //   var closeInfoWindow = function(markerId){
+      //     var marker = map.getMarker(markerId);
+      //     if (marker && marker.info)
+      //       marker.info.close();
+      //   };
 
-        var setMarkerTitle = function(markerId, title) {
-          var marker = map.getMarker(markerId);
-          if (marker)
-            marker.setTitle(title);
-        };
+      //   var setMarkerTitle = function(markerId, title) {
+      //     var marker = map.getMarker(markerId);
+      //     if (marker)
+      //       marker.setTitle(title);
+      //   };
 
-        //API for the mapMarkers object
-        //MUST ADD FUNCTION HANDLES HERE
-        return {
-          addListenersForMarkers: addListenersForMarkers,
-          showMarker: showMarker,
-          deleteMarker: deleteMarker,
-          createInfoWindow: createInfoWindow,
-          openInfoWindow: openInfoWindow,
-          closeInfoWindow: closeInfoWindow,
-          setMarkerTitle: setMarkerTitle,
-        };
+      //   //API for the mapMarkers object
+      //   //MUST ADD FUNCTION HANDLES HERE
+      //   return {
+      //     addListenersForMarkers: addListenersForMarkers,
+      //     showMarker: showMarker,
+      //     deleteMarker: deleteMarker,
+      //     createInfoWindow: createInfoWindow,
+      //     openInfoWindow: openInfoWindow,
+      //     closeInfoWindow: closeInfoWindow,
+      //     setMarkerTitle: setMarkerTitle,
+      //   };
 
-      };
+      // };
 
-      google.maps.event.addDomListener(window, 'load', thisMap.initialize);
+      google.maps.event.addDomListener(window, 'load', mapContainer.initialize);
 
     </script>
   </head>
