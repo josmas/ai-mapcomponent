@@ -43,11 +43,11 @@
             disableDoubleClickZoom: true
           };
           map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
-          centerMarker = setCenter(centerCoords);
-          showCenter(showingCenter);
+          //centerMarker = setCenter(centerCoords);
+          //showCenter(showingCenter);
 
           //Initialize marker functions object, exposes the marker functions.
-          markerFunctions = markerObject(thisMap);
+          //markerFunctions = markerObject(thisMap);
           
         };
 
@@ -99,10 +99,12 @@
          * @param infoWindowContent content to be displayed in this marker infoWindow
          * @param title a title for the marker (shown on hover in browsers)
          */
-        var createMarker = function(location, title, infoWindowContent){ 
-          //TODO add call to markerContainer here
+        var createMarker = function(location, title) {//, infoWindowContent){ 
           var marker;
           var loc;
+          var lat;
+          var lng;
+          var existingMarker;
           if (location instanceof google.maps.LatLng) {
             loc = location;
           } else if (locationFromTextCoords(location)) {
@@ -115,28 +117,33 @@
             console.log("No valid location.");
             return null;
           }
-          var existingMarker = getMarker(loc);
+          lat = loc.lat();
+          lng = loc.lng();
+
+          existingMarker = getMarker(loc);
           if (existingMarker) { //If it exists, there's no need to create it
             marker = existingMarker;
 
             // We override values even if they are not different - it's easier.
-            marker.title = title;
-            if (infoWindowContent && marker.info){
-              marker.info.setContent(infoWindowContent);
-            }
+            // marker.title = title;
+            // if (infoWindowContent && marker.info){
+            //   marker.info.setContent(infoWindowContent);
+            // }
           } else {
-            marker = new google.maps.Marker({
-              position: loc,
-              title: title || '',
-              map: map
-            });
+            marker = new markerContainer(map, lat, lng, title, null, null, true, true);
+            console.log("marker", marker);
+            // marker = new google.maps.Marker({
+            //   position: loc,
+            //   title: title || '',
+            //   map: map
+            // });
             
             //marker = markerContainer(map, )
             addMarker(marker);
 
-            if (infoWindowContent) {
-              markerFunctions.createInfoWindow(marker.getPosition().toString(), infoWindowContent);
-            }
+            // if (infoWindowContent) {
+            //   markerFunctions.createInfoWindow(marker.getPosition().toString(), infoWindowContent);
+            // }
           }
         // } else if () {
 
@@ -346,109 +353,113 @@
       } (42.3598, -71.0921, true, 2); //Auto initialize the thisMap object
 
 
-      var markerContainer = function(map, lat, lng, title, icon, clickable, visible) {
+      function markerContainer(map, lat, lng, title, icon, clickable, visible) {
         
-        var marker;
-        var position;
-        var id;
+        this.map = map;
+        this.icon = icon || null;
+        this.clickable = clickable || true;
+        this.visible = visible || true;
 
-        function initialize() {
-          var markerOptions = {
-            map: map,
+        var markerOptions = {
+            map: this.map,
             position: {lat: lat, lng: lng},
             title: title,
-            icon: icon,
-            clickable: clickable,
-            visible: visible
+            icon: this.icon,
+            clickable: this.clickable,
+            visible: this.visible
           };
 
-          marker = new google.maps.Marker(markerOptions);
-          id = marker.getPosition().toString();
-        };
-
-        var deleteMarker = function() {
-          marker.setMap(null);
-          markerContainer.id = null;
-
-          delete marker; //does this work??
-        };
-
-        var equals = function(otherMarker) {
-          return this === otherMarker;
-        };
-
-        var getId = function() {
-          return markerContainer.id;
-        };
-
-        var getIcon = function() {
-          return marker.getIcon();
-        };
-
-        var getMap = function() {
-          return marker.getMap();
-        };
-
-        var getTitle = function() {
-          return marker.getTitle();
-        };
-
-        var getClickable = function() {
-          return marker.getClickable();
-        };
-
-        var getPosition = function() {
-          return marker.getPosition();
-        };
-
-        var getVisible = function() {
-          return marker.getVisible();
-        };
-
-        var setIcon = function(icon) {
-          marker.setIcon(icon);
-        };
-
-        var setMap = function(map) {
-          marker.setMap(map);
-        };
-
-        var setTitle = function(title) {
-          marker.setTitle(title);
-        };
-
-        var setClickable = function(clickable) {
-          marker.setClickable(clickable);
-        }
-
-        var setPosition = function(lat, lng) {
-          //TODO convert to LatLng object
-          marker.setPosition({lat: lat, lng: lng});
-        };
-
-        var setVisible = function(visible) {
-          marker.setVisible(visible);
-        };
-
-        return {
-          deleteMarker: deleteMarker,
-          equals: equals,
-          getId: getId,
-          getIcon: getIcon,
-          getMap: getMap,
-          getTitle: getTitle,
-          getClickable: getClickable,
-          getPosition: getPosition,
-          getVisible: getVisible,
-          setIcon: setIcon,
-          setMap: setMap,
-          setTitle: setTitle,
-          setClickable: setClickable,
-          setPosition: setPosition,
-          setVisible: setVisible
-        }
-
+        this.marker = new google.maps.Marker(markerOptions);
+        this.id = this.marker.getPosition().toString();
+        return this.marker;
       }
+
+      markerContainer.prototype.deleteMarker = function() {
+        this.marker.setMap(null);
+        this.id = null;
+
+        delete this.marker; //does this work??
+      };
+
+      markerContainer.prototype.equals = function(otherMarker) {
+        return this === otherMarker;
+      };
+
+      markerContainer.prototype.getId = function() {
+        return this.id;
+      };
+
+      markerContainer.prototype.getIcon = function() {
+        return this.marker.getIcon();
+      };
+
+      markerContainer.prototype.getMap = function() {
+        return this.marker.getMap();
+      };
+
+      markerContainer.prototype.getTitle = function() {
+        return this.marker.getTitle();
+      };
+
+      markerContainer.prototype.getClickable = function() {
+        return this.marker.getClickable();
+      };
+
+      markerContainer.prototype.getPosition = function() {
+        return this.marker.getPosition();
+      };
+
+      markerContainer.prototype.getVisible = function() {
+        return this.marker.getVisible();
+      };
+
+      markerContainer.prototype.getMarkerObject = function() {
+        return this.marker;
+      }
+
+      markerContainer.prototype.setIcon = function(icon) {
+        this.marker.setIcon(icon);
+      };
+
+      markerContainer.prototype.setMap = function(map) {
+        this.marker.setMap(map);
+      };
+
+      markerContainer.prototype.setTitle = function(title) {
+        this.marker.setTitle(title);
+      };
+
+      markerContainer.prototype.setClickable = function(clickable) {
+        this.marker.setClickable(clickable);
+      }
+
+      markerContainer.prototype.setPosition = function(lat, lng) {
+        //TODO convert to LatLng object
+        this.marker.setPosition({lat: lat, lng: lng});
+      };
+
+      markerContainer.prototype.setVisible = function(visible) {
+        this.marker.setVisible(visible);
+      };
+
+        // return {
+        //   deleteMarker: deleteMarker,
+        //   equals: equals,
+        //   getId: getId,
+        //   getIcon: getIcon,
+        //   getMap: getMap,
+        //   getTitle: getTitle,
+        //   getClickable: getClickable,
+        //   getPosition: getPosition,
+        //   getVisible: getVisible,
+        //   getMarkerObject: getMarkerObject,
+        //   setIcon: setIcon,
+        //   setMap: setMap,
+        //   setTitle: setTitle,
+        //   setClickable: setClickable,
+        //   setPosition: setPosition,
+        //   setVisible: setVisible
+        // }
 
 
       /**
