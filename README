@@ -5,11 +5,18 @@ I am trying to avoid all extra work for our users having to sign the app (needed
 when using the Android SDK) and instead using the JavaScript API (it only needs
 an API Key).
 
-The code is purposely built in one file, as it will be loaded into an Android
-WebView. This view has an interface for two way communication between Java and
-JavaScript, so the JavaScript in this file can be augmented with values from
-Java, and the Java side can also interact with the JavaScript.
+Initially, the code was purposely built in one file, as it will be loaded into
+an Android WebView. This View has an interface for two way communication between
+Java and JavaScript, so the JavaScript in this file can be augmented with values
+from Java, and the Java side can also interact with the JavaScript.
 
-More coming soon.
+At some point in 2016, I decided to use Grunt to build the unique file from a
+series of modules using ES6 and babelify. And that's where I am at. Following
+are the list of tasks to be completed in the near future:
 
-jos - July 2o14
+TODOs:
+  - integrate http://eslint.org/
+  - start pulling out code from the main mapComponent.html file into modules.
+  - come up with a way of generating a final html file with all the code inside.
+
+jos - July 2o14 -- Feb 2016
