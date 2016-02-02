@@ -1,6 +1,11 @@
 module.exports = function (grunt) {
 
+  require('load-grunt-tasks')(grunt);
+
   grunt.initConfig({
+    eslint: {
+        target: ['./lib/*.js']
+    },
     browserify: {
       dist: {
         options: {
@@ -22,6 +27,6 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks("grunt-browserify");
   grunt.loadNpmTasks("grunt-contrib-watch");
 
-  grunt.registerTask("default", ["watch"]);
-  grunt.registerTask("build", ["browserify"]);
+  grunt.registerTask("default", ["eslint", "watch"]);
+  grunt.registerTask("build", ["eslint", "browserify"]);
 };

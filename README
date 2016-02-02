@@ -15,7 +15,6 @@ series of modules using ES6 and babelify. And that's where I am at. Following
 are the list of tasks to be completed in the near future:
 
 TODOs:
-  - integrate http://eslint.org/
   - start pulling out code from the main mapComponent.html file into modules.
   - come up with a way of generating a final html file with all the code inside.
 
