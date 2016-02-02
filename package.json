@@ -1,0 +1,31 @@
+{
+  "name": "ai-mapcomponent",
+  "version": "0.0.1",
+  "description": "the JS needed to power a Google maps component within App Inventor",
+  "main": "dist/ai-mapcomponent.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/josmas/ai-mapcomponent.git"
+  },
+  "keywords": [
+    "app",
+    "inventor",
+    "maps"
+  ],
+  "author": "jos <josmasflores@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/josmas/ai-mapcomponent/issues"
+  },
+  "homepage": "https://github.com/josmas/ai-mapcomponent#readme",
+  "devDependencies": {
+    "babel-preset-es2015": "^6.3.13",
+    "babelify": "^7.2.0",
+    "grunt": "^0.4.5",
+    "grunt-browserify": "^4.0.1",
+    "grunt-contrib-watch": "^0.6.1"
+  }
+}
