@@ -26,8 +26,13 @@ this new code has only just started.
 
     [] start pulling out code from the main mapComponent.html file into modules.
       [X] Android object file
-      [] Map file
-      [] Will markers be a part of Map or independent?
+      [] Map file: Separate...
+        [] Markers
+        [] List of Markers
+        [] Geolocation
+        [X] Panning
+        [] InfoWindows
+      [X] Will markers be a part of Map or independent? Definitely independent. See above.
     [] come up with a way of generating a final html file with all the code inside, to paste in the Android component.
 
 jos - July 2o14 -- Feb 2016
