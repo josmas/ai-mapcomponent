@@ -13,4 +13,4 @@ function colordocker() {
 # Actual call to docker run
 colordocker run -it --rm \
   -v /Users/jos/development/AppInventor/ai-mapcomponent/:/home/jos/code \
-  node:5.1.0 /bin/bash
+  josmas/ai-mapcomponent /bin/bash
