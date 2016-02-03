@@ -9,24 +9,24 @@ module.exports = function (grunt) {
     browserify: {
       dist: {
         options: {
-          transform: [ ["babelify", { "presets": ["es2015"] }] ]
+          transform: [ ['babelify', { 'presets': ['es2015'] }] ]
         },
         files: {
-          "./dist/module.js": ["./lib/index.js"]
+          './dist/module.js': ['./lib/index.js']
         }
       }
     },
     watch: {
       scripts: {
-        files: ["./lib/*.js"],
-        tasks: ["browserify"]
+        files: ['./lib/*.js', 'index-test.html'],
+        tasks: ['browserify']
       }
     }
   });
 
-  grunt.loadNpmTasks("grunt-browserify");
-  grunt.loadNpmTasks("grunt-contrib-watch");
+  grunt.loadNpmTasks('grunt-browserify');
+  grunt.loadNpmTasks('grunt-contrib-watch');
 
-  grunt.registerTask("default", ["eslint", "watch"]);
-  grunt.registerTask("build", ["eslint", "browserify"]);
+  grunt.registerTask('default', ['eslint', 'watch']);
+  grunt.registerTask('build', ['eslint', 'browserify']);
 };
