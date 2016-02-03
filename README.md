@@ -25,7 +25,7 @@ this new code has only just started.
 ## TODOs:
 
     [] start pulling out code from the main mapComponent.html file into modules.
-      [] Android object file
+      [X] Android object file
       [] Map file
       [] Will markers be a part of Map or independent?
     [] come up with a way of generating a final html file with all the code inside, to paste in the Android component.
