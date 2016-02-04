@@ -36,7 +36,7 @@ The code in this repo has to be matched with the App Inventor component [here](h
       [] Map file: Separate...
         [] Markers
         [] List of Markers
-        [] Geolocation
+        [X] Geolocation
         [X] Panning
         [] InfoWindows
       [X] Will markers be a part of Map or independent? Definitely independent. See above.
