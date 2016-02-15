@@ -31,13 +31,14 @@ The file index-test.html can be used to test this new code. Work on this new cod
 The code in this repo has to be matched with the App Inventor component [here](https://github.com/josmas/app-inventor/tree/webmap).
 ## TODOs:
 
-    [] start pulling out code from the main mapComponent.html file into modules.
+    [] Start pulling out code from the main mapComponent.html file into modules.
       [X] Android object file
       [] Map file: Separate...
         [] Markers
-        [] List of Markers
-          [X] User Markers
-          [] Dev Markers?
+          [] List of Markers
+            [X] User Markers
+            [] Dev Markers?
+          [X] Click handlers on Markers
         [X] Geolocation
         [X] Panning
         [X] InfoWindows
