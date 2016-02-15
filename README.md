@@ -36,9 +36,11 @@ The code in this repo has to be matched with the App Inventor component [here](h
       [] Map file: Separate...
         [] Markers
         [] List of Markers
+          [X] User Markers
+          [] Dev Markers?
         [X] Geolocation
         [X] Panning
-        [] InfoWindows
+        [X] InfoWindows
       [X] Will markers be a part of Map or independent? Definitely independent. See above.
     [] come up with a way of generating a final html file with all the code inside, to paste in the Android component.
 
